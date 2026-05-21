@@ -11,6 +11,7 @@ class OCPResults:
     states: list[npt.NDArray[np.float64]] = field(default_factory=list)
     ricatti_gains: list[npt.NDArray[np.float64]] = field(default_factory=list)
     feed_forward_terms: list[npt.NDArray[np.float64]] = field(default_factory=list)
+    accelerations: list[npt.NDArray[np.float64]] = field(default_factory=list)
 
 
 @dataclass

@@ -427,9 +427,17 @@ class AgimusController(Node, RobotModelsMixin):
     def send_control_msg(self, ocp_res: OCPResults) -> None:
         """Get OCP control output and publish it."""
         assert self.np_sensor_msg is not None
+        feedforward = lfc_py_types.Feedforward(
+            effort=ocp_res.feed_forward_terms.effort[0].reshape(self.rmodel.nv, 1),
+            position=ocp_res.states[0][: self.rmodel.nq].reshape(self.rmodel.nq, 1),
+            velocity=ocp_res.states[0][self.rmodel.nq :].reshape(self.rmodel.nv, 1),
+            acceleration=ocp_res.feed_forward_terms.acceleration[0].reshape(
+                self.rmodel.nv, 1
+            ),
+        )
         ctrl_msg = lfc_py_types.Control(
             feedback_gain=ocp_res.ricatti_gains[0],
-            feedforward=ocp_res.feed_forward_terms[0].reshape(self.rmodel.nv, 1),
+            feedforward=feedforward,
             initial_state=self.np_sensor_msg,
         )
         self.control_publisher.publish(control_numpy_to_msg(ctrl_msg))
