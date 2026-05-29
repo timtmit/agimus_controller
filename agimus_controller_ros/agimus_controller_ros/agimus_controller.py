@@ -163,7 +163,8 @@ class RobotModelsMixin:
         )
         self.robot_models = RobotModels(robot_params)
         self.rmodel = self.robot_models._robot_model
-
+        torso_id = self.rmodel.getJointId("torso_lift_joint")
+        self.rmodel.effortLimit[self.rmodel.joints[torso_id].idx_v] = 10000.0
         self.get_logger().info("Robot Models initialized")
 
 
@@ -430,9 +431,9 @@ class AgimusController(Node, RobotModelsMixin):
         assert self.np_sensor_msg is not None
         feedforward = lfc_py_types.Feedforward(
             effort=ocp_res.feed_forward_terms[0].reshape(self.rmodel.nv, 1),
-            position=ocp_res.states[0][: self.rmodel.nq].reshape(self.rmodel.nq, 1),
-            velocity=ocp_res.states[0][self.rmodel.nq :].reshape(self.rmodel.nv, 1),
-            acceleration=ocp_res.accelerations[0].reshape(self.rmodel.nv, 1),
+            position=ocp_res.states[1][: self.rmodel.nq].reshape(self.rmodel.nq, 1),
+            velocity=ocp_res.states_derivatives[0][self.rmodel.nv:].reshape(self.rmodel.nv, 1),
+            acceleration=ocp_res.states_derivatives[0][:self.rmodel.nv].reshape(self.rmodel.nv, 1),
         )
         ctrl_msg = lfc_py_types.Control(
             feedback_gain=ocp_res.ricatti_gains[0],
@@ -443,11 +444,11 @@ class AgimusController(Node, RobotModelsMixin):
             self.first_cmd_send = True
             self.get_logger().info(
                 f"torso pos t0 = {ocp_res.states[0][0]}, "
-                f"torso vel t0 = {ocp_res.states[0][self.rmodel.nq]}, "
-                f"torso acc t0 = {ocp_res.accelerations[0][0]}"
+                f"torso vel t0 = {ocp_res.states_derivatives[0][0]}, "
+                f"torso acc t0 = {ocp_res.states_derivatives[0][self.rmodel.nv]} "
                 f"torso pos t1 = {ocp_res.states[1][0]}, "
-                f"torso vel t1 = {ocp_res.states[1][self.rmodel.nq]}, "
-                f"torso acc t1 = {ocp_res.accelerations[1][0]}"
+                f"torso vel t1 = {ocp_res.states_derivatives[1][0]}, "
+                f"torso acc t1 = {ocp_res.states_derivatives[1][self.rmodel.nv]} "
             )
         self.control_publisher.publish(control_numpy_to_msg(ctrl_msg))
 

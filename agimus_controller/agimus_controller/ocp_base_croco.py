@@ -139,13 +139,6 @@ class OCPBaseCroco(OCPBase):
         self._debug_data.nb_iter = int(self._solver.iter)
         self._debug_data.nb_qp_iter = int(self._solver.qp_iters)
 
-    def compute_acc(self, xs):
-        acc = []
-        nq = self._robot_models.robot_model.nq
-        for i in range(len(xs) - 1):
-            acc.append((xs[i+1][nq:] - xs[i][nq:]) / self._ocp_params.dt)
-        return acc
-
     def solve(
         self,
         x0: npt.NDArray[np.float64],
@@ -177,12 +170,12 @@ class OCPBaseCroco(OCPBase):
                 else float("inf")
             )
         res = self._solver.solve(x_warmstart, u_warmstart, max_iters)
-        accelerations = self.compute_acc(self._solver.xs)
+        # from IPython import embed ; embed()
         ocp_results = OCPResults(
             states=self._solver.xs,
             ricatti_gains=self._solver.K,
             feed_forward_terms=self._solver.us,
-            accelerations=accelerations,
+            states_derivatives=self._solver.dx,
         )
         if self._ocp_params.use_debug_data:
             self.fill_debug_data(res=res, ocp_results=ocp_results)
