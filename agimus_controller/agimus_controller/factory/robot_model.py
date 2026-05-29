@@ -321,13 +321,13 @@ class RobotModels:
         """Add collision pairs to the collision model."""
         for geom1_name, geom2_name in self._params.collision_pairs:
             for geom in (geom1_name, geom2_name):
-                if not self.collision_model.existGeometryName(geom):
+                if not self._collision_model.existGeometryName(geom):
                     raise ValueError(
-                        f"Invalid collision pair with name {geom}{self.collision_model}"
+                        f"Invalid collision pair with name {geom}{self._collision_model}"
                     )
-            geom1_id = self.collision_model.getGeometryId(geom1_name)
-            geom2_id = self.collision_model.getGeometryId(geom2_name)
-            self.collision_model.addCollisionPair(pin.CollisionPair(geom1_id, geom2_id))
+            geom1_id = self._collision_model.getGeometryId(geom1_name)
+            geom2_id = self._collision_model.getGeometryId(geom2_name)
+            self._collision_model.addCollisionPair(pin.CollisionPair(geom1_id, geom2_id))
 
     def _generate_capsule_name(self, base_name: str, existing_names: list[str]) -> str:
         """Generates a unique capsule name for a geometry object.

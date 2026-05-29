@@ -139,6 +139,13 @@ class OCPBaseCroco(OCPBase):
         self._debug_data.nb_iter = int(self._solver.iter)
         self._debug_data.nb_qp_iter = int(self._solver.qp_iters)
 
+    def compute_acc(self, xs):
+        acc = []
+        nq = self._robot_models.robot_model.nq
+        for i in range(len(xs) - 1):
+            acc.append((xs[i+1][nq:] - xs[i][nq:]) / self._ocp_params.dt)
+        return acc
+
     def solve(
         self,
         x0: npt.NDArray[np.float64],
@@ -170,17 +177,7 @@ class OCPBaseCroco(OCPBase):
                 else float("inf")
             )
         res = self._solver.solve(x_warmstart, u_warmstart, max_iters)
-        accelerations = []
-        for i in range(self._problem.T):
-            data = self._problem.runningDatas[i]
-            if hasattr(data, "differential"):
-                # Case with integrator (Euler, RK4)
-                if hasattr(data.differential, "differential"):
-                    acc = data.differential.differential.multibody.joint.a
-                # Case without integrator
-                else:
-                    acc = data.differential.multibody.joint.a
-                accelerations.append(acc)
+        accelerations = self.compute_acc(self._solver.xs)
         ocp_results = OCPResults(
             states=self._solver.xs,
             ricatti_gains=self._solver.K,

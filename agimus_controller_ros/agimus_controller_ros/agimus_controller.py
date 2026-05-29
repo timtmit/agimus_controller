@@ -215,6 +215,7 @@ class AgimusController(Node, RobotModelsMixin):
         # Stores the OCP result to be able to publish it
         # at next iteration, when using a constant delay
         self._ocp_res = None
+        self.first_cmd_send = False
 
         self.initialize_ros_attributes()
         self.get_logger().info(
@@ -428,18 +429,26 @@ class AgimusController(Node, RobotModelsMixin):
         """Get OCP control output and publish it."""
         assert self.np_sensor_msg is not None
         feedforward = lfc_py_types.Feedforward(
-            effort=ocp_res.feed_forward_terms.effort[0].reshape(self.rmodel.nv, 1),
+            effort=ocp_res.feed_forward_terms[0].reshape(self.rmodel.nv, 1),
             position=ocp_res.states[0][: self.rmodel.nq].reshape(self.rmodel.nq, 1),
             velocity=ocp_res.states[0][self.rmodel.nq :].reshape(self.rmodel.nv, 1),
-            acceleration=ocp_res.feed_forward_terms.acceleration[0].reshape(
-                self.rmodel.nv, 1
-            ),
+            acceleration=ocp_res.accelerations[0].reshape(self.rmodel.nv, 1),
         )
         ctrl_msg = lfc_py_types.Control(
             feedback_gain=ocp_res.ricatti_gains[0],
             feedforward=feedforward,
             initial_state=self.np_sensor_msg,
         )
+        if not self.first_cmd_send:
+            self.first_cmd_send = True
+            self.get_logger().info(
+                f"torso pos t0 = {ocp_res.states[0][0]}, "
+                f"torso vel t0 = {ocp_res.states[0][self.rmodel.nq]}, "
+                f"torso acc t0 = {ocp_res.accelerations[0][0]}"
+                f"torso pos t1 = {ocp_res.states[1][0]}, "
+                f"torso vel t1 = {ocp_res.states[1][self.rmodel.nq]}, "
+                f"torso acc t1 = {ocp_res.accelerations[1][0]}"
+            )
         self.control_publisher.publish(control_numpy_to_msg(ctrl_msg))
 
     def initialization_callback(self) -> None:
