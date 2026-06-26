@@ -163,8 +163,8 @@ class RobotModelsMixin:
         )
         self.robot_models = RobotModels(robot_params)
         self.rmodel = self.robot_models._robot_model
-        torso_id = self.rmodel.getJointId("torso_lift_joint")
-        self.rmodel.effortLimit[self.rmodel.joints[torso_id].idx_v] = 10000.0
+        # torso_id = self.rmodel.getJointId("torso_lift_joint")
+        # self.rmodel.effortLimit[self.rmodel.joints[torso_id].idx_v] = 10000.0
         self.get_logger().info("Robot Models initialized")
 
 
@@ -432,8 +432,8 @@ class AgimusController(Node, RobotModelsMixin):
         feedforward = lfc_py_types.Feedforward(
             effort=ocp_res.feed_forward_terms[0].reshape(self.rmodel.nv, 1),
             position=ocp_res.states[1][: self.rmodel.nq].reshape(self.rmodel.nq, 1),
-            velocity=ocp_res.states_derivatives[0][self.rmodel.nv:].reshape(self.rmodel.nv, 1),
-            acceleration=ocp_res.states_derivatives[0][:self.rmodel.nv].reshape(self.rmodel.nv, 1),
+            velocity=ocp_res.states_derivatives[0][:self.rmodel.nv].reshape(self.rmodel.nv, 1),
+            acceleration=ocp_res.states_derivatives[0][self.rmodel.nv:].reshape(self.rmodel.nv, 1),
         )
         ctrl_msg = lfc_py_types.Control(
             feedback_gain=ocp_res.ricatti_gains[0],

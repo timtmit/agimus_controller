@@ -283,9 +283,6 @@ class ResidualModelFrameTranslationStatic(ResidualModel):
     pref: T.Optional[npt.NDArray[np.float64]] = None
 
     def update(self, data, obj, pt: WeightedTrajectoryPoint):
-        assert len(pt.point.end_effector_poses) == 1, (
-            f"ResidualModelFrameTranslation requires exactly one end-effector pose, current is {pt.point.end_effector_poses}."
-        )
         assert self.frame_id in pt.point.end_effector_poses, (
             f"end_effector_poses should contains key {self.frame_id}"
         )
@@ -337,9 +334,6 @@ class ResidualModelFrameRotationStatic(ResidualModel):
     pref: T.Optional[npt.NDArray[np.float64]] = None
 
     def update(self, data, obj, pt: WeightedTrajectoryPoint):
-        assert len(pt.point.end_effector_poses) == 1, (
-            f"ResidualModelFrameRotationStatic requires exactly one end-effector pose, current is {pt.point.end_effector_poses}."
-        )
         assert self.frame_id in pt.point.end_effector_poses, (
             f"ResidualModelFrameRotationStatic: end_effector_poses should contain the key {self.frame_id}"
         )
